@@ -1,0 +1,52 @@
+'use strict';
+
+/** @type {import('sequelize-cli').Migration} */
+module.exports = {
+  async up (queryInterface, Sequelize) {
+    await queryInterface.createTable('users', {
+      id: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        primaryKey: true,
+        autoIncrement: true,
+        allowNull: false
+      },
+      name: {
+        type: Sequelize.STRING(50),
+        allowNull: false
+      },
+      email: {
+        type: Sequelize.STRING(50),
+        allowNull: false,
+        unique: true
+      },
+      password: {
+        type: Sequelize.STRING(225),
+        allowNull: false
+      },
+      roleId: {
+        type: Sequelize.INTEGER.UNSIGNED,
+        allowNull: true,
+        references: {
+          model: 'roles',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL'
+      },
+      createdAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      },
+      updatedAt: {
+        allowNull: false,
+        type: Sequelize.DATE
+      }
+    });
+    
+    await queryInterface.addIndex('users', ['roleId']);
+  },
+
+  async down (queryInterface, Sequelize) {
+    await queryInterface.dropTable('users');
+  }
+};
