@@ -1,24 +1,16 @@
 import express from 'express';
+import { asyncHandler } from '../middleware/asyncHandler';
+import { registerRateLimit, loginRateLimit, generalRateLimit } from '../middleware/rateLimiter';
+import { register, login, refresh, logout, profile } from '../controllers/auth';
+
 const router = express.Router();
 
-router.post('/register', (req, res) => {
-    res.json({ message: 'Register endpoint - to be implemented' });
-});
+router.use(generalRateLimit);
 
-router.post('/login', (req, res) => {
-    res.json({ message: 'Login endpoint - to be implemented' });
-});
-
-router.post('/refresh', (req, res) => {
-    res.json({ message: 'Refresh token endpoint - to be implemented' });
-});
-
-router.post('/logout', (req, res) => {
-    res.json({ message: 'Logout endpoint - to be implemented' });
-});
-
-router.get('/profile', (req, res) => {
-    res.json({ message: 'Profile endpoint - to be implemented' });
-});
+router.post('/register', registerRateLimit, asyncHandler(register));
+router.post('/login', loginRateLimit, asyncHandler(login));
+router.post('/refresh', asyncHandler(refresh));
+router.post('/logout', asyncHandler(logout));
+router.get('/profile', asyncHandler(profile));
 
 export default router;
