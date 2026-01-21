@@ -5,7 +5,7 @@ import { handleError } from '../helpers/index';
 
 export interface UserPayload {
 	userDetails: {
-		username: string;
+		name: string;
 		email: string;
 		id: number;
 	};

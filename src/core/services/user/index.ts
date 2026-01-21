@@ -1,8 +1,7 @@
 import bcrypt from 'bcrypt';
 import { UserRepository } from '../../repositories/UserRepository';
 import { RoleRepository } from '../../repositories/RoleRepository';
-import { getAccessToken } from '../../helpers';
-import { validateRegisterPayload } from '../../helpers/validation';
+import { validateRegisterPayload, validateUserId } from '../../helpers/validation';
 import logger from '../../helpers/logger';
 
 export class UserService {
@@ -56,8 +55,37 @@ export class UserService {
             });
 
         } catch (error) {
-            logger.error('User register error', {
+            logger.error('User registration error', {
                 email: userData.email,
+                error: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
+            throw error;
+        }
+    }
+
+    async getUserProfile(userId: number) {
+        try {
+            logger.info('Get user profile attempt', { userId });
+            
+            const { error } = validateUserId(userId);
+            if (error) {
+                logger.warn('Invalid userId for getUserProfile', { error: error.details[0].message });
+                throw new Error(error.details[0].message);
+            }
+
+            const user = await this.userRepository.find({ id: userId });
+            if (!user) {
+                logger.warn('User profile not found', { userId });
+                throw new Error('User not found');
+            }
+
+            const { id, name, email, roleId } = user;
+            logger.info('User profile retrieved successfully', { userId });
+            return { id, name, email, roleId };
+        } catch (error) {
+            logger.error('Get user profile error', {
+                userId,
                 error: error instanceof Error ? error.message : String(error),
                 stack: error instanceof Error ? error.stack : undefined
             });

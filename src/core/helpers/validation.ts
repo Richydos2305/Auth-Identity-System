@@ -10,6 +10,10 @@ const userSchemas = {
             .pattern(new RegExp('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#\\$%\\^&\\*])'))
             .message('Password must contain at least 8 characters with uppercase, lowercase, number and special character')
             .required()
+        }),
+        login: Joi.object({
+        email: Joi.string().email().trim().required(),
+        password: Joi.string().required()
     })
 };
 
@@ -32,10 +36,22 @@ export const validateRegisterPayload = (userData: { name: string; email: string;
     return userSchemas.register.validate(userData);
 };
 
+export const validateLoginPayload = (loginData: { email: string; password: string }) => {
+    return userSchemas.login.validate(loginData);
+};
+
 export const validateCreateTaskPayload = (taskData: { title: string; description: string; user_id: number }) => {
     return taskSchemas.create.validate(taskData);
 };
 
 export const validateUpdateTaskPayload = (updateData: { title?: string; description?: string }) => {
     return taskSchemas.update.validate(updateData);
+};
+
+export const validateRefreshToken = (refreshToken: string) => {
+    return Joi.string().min(10).required().validate(refreshToken);
+};
+
+export const validateUserId = (userId: number) => {
+    return Joi.number().integer().positive().required().validate(userId);
 };
