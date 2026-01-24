@@ -1,144 +1,66 @@
 import { Request, Response } from 'express';
-import { UserService } from '../services/user';
-import { AuthService } from '../services/auth';
-import { UserRepository } from '../repositories/UserRepository';
-import { RoleRepository } from '../repositories/RoleRepository';
-import { RefreshTokenRepository } from '../repositories/RefreshTokenRepository';
+import { ResponseHandlerParams } from '../interfaces/helpers';
+import { ServiceFactory } from '../factories/ServiceFactory';
 
+const {createAuthService, createUserService} = ServiceFactory;
 
-export const register = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const roleRepository = new RoleRepository();
-    const userService = new UserService(userRepository, roleRepository);
+export const register = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const userService = createUserService();
     const { name, email, password } = req.body;
-    
-    try {
-        const result = await userService.register({ name, email, password });
-        
-        res.status(201).json({
-            success: true,
-            message: 'Registration successful',
-            data: result
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Registration failed'
-        });
-    }
+    const result = await userService.register({ name, email, password });
+    return { status: 201, message: 'Registration successful', data: result };
 };
 
-export const login = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const refreshTokenRepository = new RefreshTokenRepository();
-    const authService = new AuthService(userRepository, refreshTokenRepository);
+export const login = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const authService = createAuthService();
     const { email, password } = req.body;
 
-    try {
-        const result = await authService.login({ email, password });
-        res.status(200).json({
-            success: true,
-            message: 'Login successful',
-            data: {
-                user: result.user,
-                tokens: result.tokens
-            }
-        });
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Login failed'
-        });
-    }
+    const result = await authService.login({ email, password });
+    return { status: 200, message: 'Login successful', data: result };
 };
 
-export const refresh = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const refreshTokenRepository = new RefreshTokenRepository();
-    const authService = new AuthService(userRepository, refreshTokenRepository);
+export const refresh = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const authService = createAuthService();
     const { refreshToken } = req.body;
 
-    try {
-        const tokens = await authService.refresh(refreshToken);
-        res.status(200).json({
-            success: true,
-            message: 'Token refreshed',
-            data: {
-                tokens
-            }
-        });
-    } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Token refresh failed'
-        });
-    }
+    const tokens = await authService.refresh(refreshToken);
+    return {
+        status: 200,
+        message: 'Token refreshed',
+        data: tokens
+    };
 };
 
-export const logout = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const refreshTokenRepository = new RefreshTokenRepository();
-    const authService = new AuthService(userRepository, refreshTokenRepository);
+export const logout = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const authService = createAuthService();
     const { refreshToken } = req.body;
 
-    try {
-        const result = await authService.logout(refreshToken);
-        res.status(200).json({
-            success: true,
-            message: result.message
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Logout failed'
-        });
-    }
+    const result = await authService.logout(refreshToken);
+    return {
+        status: 200,
+        message: result.message
+    };
 };
 
-export const logoutAll = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const refreshTokenRepository = new RefreshTokenRepository();
-    const authService = new AuthService(userRepository, refreshTokenRepository);
+export const logoutAll = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const authService = createAuthService();
     const userId = res.locals?.userDetails?.id;
 
-    try {
-        const result = await authService.logoutAll(userId);
-        res.status(200).json({
-            success: true,
-            message: result.message
-        });
-    } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error instanceof Error ? error.message : 'Logout all failed'
-        });
-    }
+    const result = await authService.logoutAll(userId);
+    return {
+        status: 200,
+        message: result.message
+    };
 };
 
-export const profile = async (req: Request, res: Response) => {
-    const userRepository = new UserRepository();
-    const roleRepository = new RoleRepository();
-    const userService = new UserService(userRepository, roleRepository);
+export const profile = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
+    const userService = createUserService();
     const userId = res.locals?.userDetails?.id;
 
-    try {
-        const userProfile = await userService.getUserProfile(userId);
-        res.status(200).json({
-            success: true,
-            message: 'Profile retrieved successfully',
-            data: userProfile
-        });
-    } catch (error) {
-        if (error instanceof Error && error.message === 'User not found') {
-            res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        } else {
-            res.status(500).json({
-                success: false,
-                message: error instanceof Error ? error.message : 'Failed to fetch profile'
-            });
-        }
-    }
+    const userProfile = await userService.getUserProfile(userId);
+    return {
+        status: 200,
+        message: 'Profile retrieved successfully',
+        data: userProfile
+    };
 };

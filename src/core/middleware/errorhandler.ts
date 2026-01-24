@@ -1,10 +1,23 @@
 import { NextFunction, Request, Response } from 'express';
+import { isCustomError, SystemError } from '../errors/CustomErrors';
+import logger from '../helpers/logger';
 
-const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-	
-	if (err && !res.headersSent) {
-		res.send({ Title: 'Error', Message: err.message });
+const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction): void => {
+	if (res.headersSent) {
+		return next(err);
 	}
-    console.error(err)
+
+	const error = isCustomError(err) ? err : new SystemError('Internal server error');
+
+	logger.error(error);
+
+	res.status(error.status).json({
+		success: false,
+		message: error.message,
+		error: {
+			code: error.code
+		}
+	});
 };
+
 export default errorHandler;

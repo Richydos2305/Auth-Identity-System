@@ -1,9 +1,10 @@
 import rateLimit from 'express-rate-limit';
+import { SecurityConfig } from '../constants';
 
 const createRateLimitMessage = (type: string) => ({
     success: false,
     message: `Too many ${type} attempts from this IP address. Please try again later.`,
-    retryAfter: 15 * 60
+    retryAfter: SecurityConfig.RateLimitWindow / 1000
 });
 
 const rateLimitHandler = (type: string) => (req: any, res: any) => {
@@ -11,8 +12,8 @@ const rateLimitHandler = (type: string) => (req: any, res: any) => {
 };
 
 export const registerRateLimit = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 5,
+    windowMs: SecurityConfig.RateLimitWindow,
+    max: SecurityConfig.MaxLoginAttempts,
     message: createRateLimitMessage('registration'),
     standardHeaders: true,
     legacyHeaders: false,
@@ -20,8 +21,8 @@ export const registerRateLimit = rateLimit({
 });
 
 export const loginRateLimit = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
+    windowMs: SecurityConfig.RateLimitWindow,
+    max: SecurityConfig.MaxLoginAttempts * 2,
     message: createRateLimitMessage('login'),
     standardHeaders: true,
     legacyHeaders: false,
@@ -29,7 +30,7 @@ export const loginRateLimit = rateLimit({
 });
 
 export const generalRateLimit = rateLimit({
-    windowMs: 15 * 60 * 1000,
+    windowMs: SecurityConfig.RateLimitWindow,
     max: 100,
     message: createRateLimitMessage(''),
     standardHeaders: true,

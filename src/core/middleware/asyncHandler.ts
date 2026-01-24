@@ -1,10 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
+import { ResponseHandlerParams } from '../interfaces/helpers';
+import { responseHandler } from '../helpers';
 
-export const asyncHandler = ( controller: (req: Request,res: Response) => Promise<void> ) =>
+export const asyncHandler = ( controller: (req: Request,res: Response) => Promise<ResponseHandlerParams> ) =>
 		async (req: Request, res: Response, next: NextFunction) => {
 			try {
-				await controller(req, res);
+				const result = await controller(req, res);
+				responseHandler(res, result);
 			} catch (error) {
-				return next(error);
+				next(error);
 			}
 		};
