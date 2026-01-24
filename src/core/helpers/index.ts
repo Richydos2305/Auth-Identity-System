@@ -1,7 +1,6 @@
 import { Response } from 'express';
 import { settings } from '../config/application';
 import { sign } from 'jsonwebtoken';
-import { Tasks } from '../models/tasks';
 import { Users } from '../models/users';
 import { RefreshTokenRepository } from '../repositories/RefreshTokenRepository';
 import { randomBytes } from 'crypto';
@@ -51,12 +50,6 @@ export async function getTokens(user: {name: string, email: string, id: number})
     refreshToken,
     expiresIn: TokenConfig.AccessTokenExpirySeconds
   };
-}
-
-export function isAuthorizedUser(task: Tasks, loggedInUserId: number ): boolean {
-  if (task.user_id === loggedInUserId)
-    return true
-  return false
 }
 
 export async function getUser(id: number) {

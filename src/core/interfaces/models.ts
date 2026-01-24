@@ -31,9 +31,3 @@ export interface RefreshToken {
     expiresAt: Date;
     isRevoked: boolean;
 }
-
-export interface Task {
-    title: string;
-    description: string;
-    user_id: number;
-}
