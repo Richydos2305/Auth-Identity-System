@@ -52,15 +52,3 @@ export const logoutAll = async (req: Request, res: Response): Promise<ResponseHa
         message: result.message
     };
 };
-
-export const profile = async (req: Request, res: Response): Promise<ResponseHandlerParams> => {
-    const userService = createUserService();
-    const userId = res.locals?.userDetails?.id;
-
-    const userProfile = await userService.getUserProfile(userId);
-    return {
-        status: 200,
-        message: 'Profile retrieved successfully',
-        data: userProfile
-    };
-};
