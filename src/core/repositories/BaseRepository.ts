@@ -1,4 +1,4 @@
-import { Model, ModelStatic, WhereOptions, Transaction, CreationAttributes } from 'sequelize';
+import { Model, ModelStatic, WhereOptions, Transaction, CreationAttributes, FindOptions } from 'sequelize';
 
 export abstract class BaseRepository<T extends Model> {
     protected model: ModelStatic<T>;
@@ -11,8 +11,8 @@ export abstract class BaseRepository<T extends Model> {
         return await this.model.findOne({ where, transaction, lock: exclusiveLock ? Transaction?.LOCK.UPDATE : !!transaction });
     }
 
-    async findAll(where?: WhereOptions<T>, transaction?: Transaction): Promise<T[]> {
-        return await this.model.findAll({ where, transaction });
+    async findAll(where?: WhereOptions<T>, transaction?: Transaction, options?: Omit<FindOptions<T>, 'where' | 'transaction'>): Promise<T[]> {
+        return await this.model.findAll({ where, transaction, ...options });
     }
 
     async create(data: CreationAttributes<T>, transaction?: Transaction): Promise<T> {
