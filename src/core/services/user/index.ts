@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { UserRepository } from '../../repositories/UserRepository';
 import { validateRegisterPayload, validateUserId } from '../../helpers/validation';
 import logger from '../../helpers/logger';
-import { getDefaultUserRole, getTokens, getUser, sanitizeUser } from '../../helpers';
+import { getDefaultUserRole, getTokens, getUser, sanitizeUser, fetchUsers } from '../../helpers';
 import { ConflictError } from '../../errors/CustomErrors';
 import { TokenConfig } from '../../constants';
 
@@ -53,5 +53,26 @@ export class UserService {
 
         logger.info('User profile retrieved successfully', { userId });
         return sanitizeUser(user);
+    }
+
+    async getUsers({ page = 1, limit = 20, search }: { page?: number; limit?: number; search?: string }) {
+        logger.info('Get users attempt', { page, limit, search });
+
+        const offset = (page - 1) * limit;
+        const allUsers = await fetchUsers(this.userRepository, search);
+        const total = allUsers.length;
+        const paginatedUsers = allUsers.slice(offset, offset + limit);
+
+        logger.info('Users retrieved successfully', { page, limit, total });
+        
+        return {
+            users: paginatedUsers.map(user => sanitizeUser(user)),
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit)
+            }
+        };
     }
 }

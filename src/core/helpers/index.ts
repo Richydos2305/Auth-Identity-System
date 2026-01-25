@@ -9,8 +9,10 @@ import logger from './logger';
 import { RefreshToken } from '../interfaces/models';
 import { UserRepository } from '../repositories/UserRepository';
 import { RoleRepository } from '../repositories/RoleRepository';
+import { PermissionRepository } from '../repositories/PermissionRepository';
 import { NotFoundError, SystemError, UnauthorizedError } from '../errors/CustomErrors';
 import { TokenConfig } from '../constants';
+import { Op } from 'sequelize';
 
 export function sanitizeUser(user: Users): SanitizeUserParams {
   const { id, name, email, roleId } = user;
@@ -21,13 +23,14 @@ export function handleError(res: Response, statusCode: number, message: string):
   res.status(statusCode).send({ message });
 }
 
-export async function getTokens(user: {name: string, email: string, id: number}): Promise<{ accessToken: string, refreshToken: string, expiresIn: number }> {
+export async function getTokens(user: {name: string, email: string, id: number, roleId: number}): Promise<{ accessToken: string, refreshToken: string, expiresIn: number }> {
   const accessToken = sign(
     {
       userDetails: {
         name: user.name,
         email: user.email,
-        id: user.id
+        id: user.id,
+        roleId: user.roleId
       }
     },
     settings.secretKey,
@@ -71,6 +74,18 @@ export async function getDefaultUserRole() {
       throw new SystemError('System configuration error. Please contact administrator.');
   }
   return defaultRole;
+}
+
+export async function getPermission(permissionName: string) {
+  const permissionRepo = new PermissionRepository();
+  const permission = await permissionRepo.find({ name: permissionName });
+  
+  if (!permission) {
+    logger.warn('Permission not found', { permissionName });
+    throw new NotFoundError('Permission not found');
+  }
+  
+  return permission;
 } 
 
 export async function getRefreshToken(token: string) {
@@ -97,4 +112,18 @@ export function assertRefreshTokenIsValid(refreshToken: RefreshToken) {
 export function responseHandler(res: Response, result: ResponseHandlerParams ) {
   const { status = 200, message = 'Success', data = {} } = result;
   res.status(status).json({ success: true, message, data });
+}
+
+export async function fetchUsers(userRepository: UserRepository, search?: string) {
+  const where: any = {};
+
+  if (search) {
+    const searchPattern = { [Op.iLike]: `%${search}%` };
+    where[Op.or] = [
+      { name: searchPattern },
+      { email: searchPattern }
+    ];
+  }
+
+  return await userRepository.findAll(where);
 }
